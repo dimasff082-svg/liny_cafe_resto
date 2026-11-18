@@ -94,6 +94,18 @@
                         </svg>
                         Laporan Laba / Rugi
                     </a>
+                    <a href="{{ route('warehouse.raw_materials.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('warehouse.raw_materials.index') || request()->routeIs('warehouse.raw_materials.history') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md shadow-amber-950/30' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        Inventori Bahan Baku
+                    </a>
+                    <a href="{{ route('warehouse.raw_materials.mutations') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('warehouse.raw_materials.mutations') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md shadow-amber-950/30' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Riwayat Mutasi Stok
+                    </a>
                     <a href="{{ route('owner.salaries.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('owner.salaries.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md shadow-amber-950/30' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
                         <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -115,10 +127,22 @@
 
                 @elseif(auth()->user()->isWarehouse())
                     <!-- Warehouse Staff Navigation -->
-                    <div class="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Gudang & Operasional</div>
-                    <a href="{{ route('warehouse.expenses.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('warehouse.expenses.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                    <div class="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-[#8c8270]">Inventori & Gudang</div>
+                    <a href="{{ route('warehouse.raw_materials.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('warehouse.raw_materials.index') || request()->routeIs('warehouse.raw_materials.history') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
                         <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        Inventori Bahan Baku
+                    </a>
+                    <a href="{{ route('warehouse.raw_materials.mutations') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('warehouse.raw_materials.mutations') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Riwayat Mutasi Stok
+                    </a>
+                    <a href="{{ route('warehouse.expenses.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('warehouse.expenses.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                         Transaksi Pengeluaran
                     </a>
@@ -163,9 +187,21 @@
                         </svg>
                         Transaksi Penjualan
                     </a>
-                    <a href="{{ route('warehouse.expenses.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('warehouse.expenses.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                    <a href="{{ route('warehouse.raw_materials.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('warehouse.raw_materials.index') || request()->routeIs('warehouse.raw_materials.history') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
                         <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        Inventori Bahan Baku
+                    </a>
+                    <a href="{{ route('warehouse.raw_materials.mutations') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('warehouse.raw_materials.mutations') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Riwayat Mutasi Stok
+                    </a>
+                    <a href="{{ route('warehouse.expenses.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition {{ request()->routeIs('warehouse.expenses.*') ? 'bg-[#c59b27] text-stone-950 font-bold shadow-md' : 'text-[#c7bfb1] hover:bg-[#25221c] hover:text-[#f3eee5]' }}">
+                        <svg class="w-4 h-4 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                         Transaksi Pengeluaran
                     </a>

@@ -160,7 +160,14 @@
                             </td>
                             <td class="py-3 px-5">
                                 <span class="font-bold text-[#262017] block text-xs">{{ $exp->title }}</span>
-                                <span class="text-[10px] text-[#8f8573]">{{ $exp->category }}</span>
+                                <div class="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                    <span class="text-[10px] text-[#8f8573]">{{ $exp->category }}</span>
+                                    @if($exp->rawMaterial)
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-amber-50 border border-amber-200 text-[#8c6b1c] text-[10px] font-bold">
+                                            Restock: +{{ rtrim(rtrim(number_format($exp->raw_material_quantity, 2, ',', '.'), '0'), ',') }} {{ $exp->rawMaterial->unit }} ({{ $exp->rawMaterial->name }})
+                                        </span>
+                                    @endif
+                                </div>
                                 @if($exp->notes)
                                     <span class="block text-[10px] text-stone-500 italic mt-0.5">{{ $exp->notes }}</span>
                                 @endif
@@ -175,14 +182,14 @@
                             </td>
                             <td class="py-3 px-5 text-center">
                                 @if($exp->receipt_proof)
-                                    <a href="{{ asset('storage/' . $exp->receipt_proof) }}" target="_blank"
-                                        class="inline-flex items-center gap-1 text-[11px] font-bold text-[#c59b27] hover:text-[#a98119] underline">
+                                    <button type="button" onclick="openPhotoPreview('{{ asset('storage/' . $exp->receipt_proof) }}', 'Bukti Nota {{ $exp->expense_number }} - {{ addslashes($exp->title) }}')"
+                                        class="inline-flex items-center gap-1 text-[11px] font-bold text-[#c59b27] hover:text-[#a98119] underline cursor-pointer">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
                                         Lihat Foto
-                                    </a>
+                                    </button>
                                 @else
                                     <span class="text-[10px] text-stone-400 italic">-</span>
                                 @endif
@@ -275,6 +282,44 @@
                 </div>
             </div>
 
+            <!-- Hubungkan ke Bahan Baku (Auto Restock Inventori) -->
+            <div id="raw-material-select-section" class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        Hubungkan ke Inventori (Auto Restock)
+                    </span>
+                    <span class="text-[10px] text-amber-700/80 font-medium">Opsional</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-bold text-stone-700 mb-1">Pilih Master Bahan Baku</label>
+                        <select name="raw_material_id" id="expenseRawMaterialSelect" onchange="onRawMaterialSelected(this)"
+                            class="w-full bg-white border border-[#dcd4c5] rounded-xl px-3 py-2 text-xs text-[#262017] focus:ring-2 focus:ring-[#c59b27] focus:outline-none">
+                            <option value="">-- Pilih Bahan Baku (Jika Ada) --</option>
+                            @foreach($rawMaterials as $rm)
+                                <option value="{{ $rm->id }}" data-name="{{ $rm->name }}" data-unit="{{ $rm->unit }}" data-category="{{ $rm->category }}">
+                                    [{{ $rm->code }}] {{ $rm->name }} ({{ $rm->unit }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-stone-700 mb-1">Kuantitas / Jumlah Masuk</label>
+                        <div class="relative">
+                            <input type="number" step="any" min="0.01" name="raw_material_quantity" id="expenseRawMaterialQty" placeholder="0.00"
+                                class="w-full bg-white border border-[#dcd4c5] rounded-xl px-3 py-2 text-xs font-bold text-[#262017] focus:ring-2 focus:ring-[#c59b27] focus:outline-none">
+                            <span id="expenseRawMaterialUnitBadge" class="absolute right-3 top-2 text-xs font-semibold text-stone-400"></span>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[10.5px] text-amber-800/80 leading-snug">
+                    Jika dipilih, sisa stok fisik bahan baku akan otomatis bertambah saat nota disimpan, dan ditarik kembali jika nota dihapus.
+                </p>
+            </div>
+
             <!-- Nama Pengeluaran / Barang -->
             <div>
                 <label class="block text-xs font-bold text-[#5c5346] mb-1 font-serif-classic">Nama Pengeluaran / Barang *</label>
@@ -360,6 +405,50 @@
     </div>
 </div>
 
+<!-- Modal Pratinjau Foto Bukti Nota Belanja -->
+<div id="modal-photo-preview" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-stone-900/80 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto" onclick="if(event.target === this) closePhotoPreview()">
+    <div class="bg-white rounded-3xl shadow-2xl border border-[#e5dfd3] max-w-xl w-full flex flex-col overflow-hidden my-auto" style="max-height: 90vh;">
+        <!-- Header Modal -->
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-[#f0ebd9] bg-white shrink-0">
+            <div class="pr-3">
+                <h3 class="font-serif-classic font-bold text-sm sm:text-base text-[#262017] truncate max-w-md" id="photo-preview-title">Foto Bukti Nota</h3>
+                <p class="text-[10.5px] text-[#786e60]">Bukti struk / kuitansi fisik pengeluaran operasional.</p>
+            </div>
+            <button type="button" onclick="closePhotoPreview()" class="text-stone-400 hover:text-stone-700 text-2xl font-bold p-1 leading-none shrink-0" title="Tutup (×)">&times;</button>
+        </div>
+
+        <!-- Body Image Container with strict bounds -->
+        <div class="flex-1 overflow-auto p-4 flex items-center justify-center bg-[#f7f5ef] min-h-[180px]" style="max-height: calc(85vh - 110px);">
+            <img id="photo-preview-img" src="" alt="Bukti Pengeluaran"
+                class="rounded-xl shadow-xs"
+                style="max-width: 100%; max-height: 60vh; width: auto; height: auto; object-fit: contain; display: block; margin: 0 auto;"
+                onerror="this.style.display='none'; document.getElementById('photo-preview-error').classList.remove('hidden');"
+                onload="this.style.display='block'; document.getElementById('photo-preview-error').classList.add('hidden');">
+            <div id="photo-preview-error" class="hidden py-8 text-center text-stone-500 text-xs">
+                <svg class="w-10 h-10 mx-auto mb-2 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p class="font-bold text-stone-700">Foto bukti belum dapat dimuat</p>
+                <p class="text-[11px] text-stone-400 mt-0.5">Pastikan file gambar masih tersimpan di penyimpanan server.</p>
+            </div>
+        </div>
+
+        <!-- Footer Modal -->
+        <div class="flex items-center justify-between px-5 py-3 border-t border-[#f0ebd9] bg-[#faf8f4] shrink-0">
+            <a id="photo-preview-link" href="#" target="_blank" rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 text-xs font-bold text-[#c59b27] hover:text-[#a98119] transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Buka Gambar Penuh
+            </a>
+            <button type="button" onclick="closePhotoPreview()" class="px-5 py-2 rounded-xl text-xs font-bold bg-[#262017] text-white hover:bg-stone-800 shadow-xs">
+                Tutup (×)
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     function formatRupiahInput(input, targetHiddenId) {
         let clean = input.value.replace(/\D/g, '');
@@ -377,12 +466,73 @@
     function updateCategorySuggestions(type) {
         const titleInput = document.getElementById('expenseTitleInput');
         const catSelect = document.getElementById('expenseCategorySelect');
+        const rmSection = document.getElementById('raw-material-select-section');
+
         if (type === 'raw_material') {
-            titleInput.placeholder = "Contoh: Pembelian Tepung Terigu Segitiga 25kg";
-            catSelect.value = "Bahan Baku Kue & Roti";
+            titleInput.placeholder = "Contoh: Pembelian Biji Kopi Arabika 5kg";
+            catSelect.value = "Bahan Baku Minuman & Kopi";
+            if (rmSection) rmSection.classList.remove('hidden');
         } else {
             titleInput.placeholder = "Contoh: Pembayaran Tagihan Listrik PLN Bulan Ini";
             catSelect.value = "Listrik PLN";
+            if (rmSection) rmSection.classList.add('hidden');
+            // Reset dropdown jika pilih operasional
+            const rmSelect = document.getElementById('expenseRawMaterialSelect');
+            if (rmSelect) rmSelect.value = '';
+            const rmQty = document.getElementById('expenseRawMaterialQty');
+            if (rmQty) rmQty.value = '';
+            const rmUnitBadge = document.getElementById('expenseRawMaterialUnitBadge');
+            if (rmUnitBadge) rmUnitBadge.innerText = '';
+        }
+    }
+
+    function onRawMaterialSelected(select) {
+        const selectedOption = select.options[select.selectedIndex];
+        const name = selectedOption.getAttribute('data-name');
+        const unit = selectedOption.getAttribute('data-unit');
+        const category = selectedOption.getAttribute('data-category');
+
+        const unitBadge = document.getElementById('expenseRawMaterialUnitBadge');
+        if (unitBadge) {
+            unitBadge.innerText = unit ? unit : '';
+        }
+
+        const titleInput = document.getElementById('expenseTitleInput');
+        if (name && (!titleInput.value || titleInput.value.startsWith('Pembelian'))) {
+            titleInput.value = 'Pembelian ' + name;
+        }
+
+        const catSelect = document.getElementById('expenseCategorySelect');
+        if (category && catSelect) {
+            catSelect.value = 'Bahan Baku Minuman & Kopi';
+        }
+    }
+
+    function openPhotoPreview(imageUrl, title) {
+        const img = document.getElementById('photo-preview-img');
+        const err = document.getElementById('photo-preview-error');
+        const link = document.getElementById('photo-preview-link');
+
+        if (err) err.classList.add('hidden');
+        if (img) {
+            img.style.display = 'block';
+            img.src = imageUrl;
+        }
+        if (link) {
+            link.href = imageUrl;
+        }
+        if (title) {
+            document.getElementById('photo-preview-title').innerText = title;
+        }
+        document.getElementById('modal-photo-preview').classList.remove('hidden');
+    }
+
+    function closePhotoPreview() {
+        document.getElementById('modal-photo-preview').classList.add('hidden');
+        const img = document.getElementById('photo-preview-img');
+        if (img) {
+            img.src = '';
+            img.style.display = 'none';
         }
     }
 </script>

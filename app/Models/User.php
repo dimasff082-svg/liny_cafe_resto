@@ -120,6 +120,11 @@ class User extends Authenticatable
         return $this->hasMany(Expense::class);
     }
 
+    public function rawMaterialMutations(): HasMany
+    {
+        return $this->hasMany(RawMaterialMutation::class);
+    }
+
     public function salaries(): HasMany
     {
         return $this->hasMany(Salary::class);

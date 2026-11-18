@@ -62,4 +62,3 @@ class EmployeeSalaryController extends Controller
         return view('admin.salaries.print', compact('salary'));
     }
 }
-

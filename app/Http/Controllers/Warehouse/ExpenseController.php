@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Warehouse;
 
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
+use App\Models\RawMaterial;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,7 @@ class ExpenseController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = Expense::with('user')->latest('expense_date');
+        $query = Expense::with(['user', 'rawMaterial'])->latest('expense_date');
 
         if ($type = $request->input('expense_type')) {
             if ($type !== 'all') {
@@ -68,7 +69,9 @@ class ExpenseController extends Controller
             'operational_expense' => (float) ($stats->operational_expense ?? 0),
         ];
 
-        return view('warehouse.expenses.index', compact('expenses', 'summary'));
+        $rawMaterials = RawMaterial::orderBy('name', 'asc')->get();
+
+        return view('warehouse.expenses.index', compact('expenses', 'summary', 'rawMaterials'));
     }
 
     /**
@@ -84,6 +87,8 @@ class ExpenseController extends Controller
 
         $validated = $request->validate([
             'expense_type' => ['required', 'string', 'in:raw_material,operational'],
+            'raw_material_id' => ['nullable', 'exists:raw_materials,id'],
+            'raw_material_quantity' => ['nullable', 'numeric', 'min:0.01'],
             'title' => ['required', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:100'],
             'amount' => ['required', 'numeric', 'min:1'],
@@ -113,9 +118,11 @@ class ExpenseController extends Controller
             $proofPath = $request->file('receipt_proof')->store('expenses', 'public');
         }
 
-        Expense::create([
+        $expense = Expense::create([
             'expense_number' => $expenseNumber,
             'expense_type' => $validated['expense_type'],
+            'raw_material_id' => $validated['raw_material_id'] ?? null,
+            'raw_material_quantity' => $validated['raw_material_quantity'] ?? null,
             'title' => $validated['title'],
             'category' => $validated['category'] ?? ($validated['expense_type'] === 'raw_material' ? 'Bahan Baku' : 'Operasional'),
             'amount' => $validated['amount'],
@@ -126,15 +133,47 @@ class ExpenseController extends Controller
             'user_id' => $request->user()->id,
         ]);
 
+        // Restock otomatis bahan baku jika nota tipe raw_material terhubung dengan bahan
+        if ($expense->isRawMaterial() && ! empty($validated['raw_material_id']) && ! empty($validated['raw_material_quantity'])) {
+            $rawMaterial = RawMaterial::find($validated['raw_material_id']);
+            if ($rawMaterial) {
+                $qty = (float) $validated['raw_material_quantity'];
+                $unitPrice = $qty > 0 ? (float) ($validated['amount'] / $qty) : null;
+                $rawMaterial->recordMutation(
+                    type: 'in',
+                    quantity: $qty,
+                    notes: "Restock otomatis dari nota belanja: {$validated['title']}",
+                    referenceNumber: $expenseNumber,
+                    userId: $request->user()->id,
+                    unitPrice: $unitPrice
+                );
+            }
+        }
+
         return redirect()->route('warehouse.expenses.index')
             ->with('success', "Transaksi pengeluaran {$expenseNumber} berhasil dicatat.");
     }
 
     /**
      * Menghapus transaksi pengeluaran jika salah input.
+     * Jika nota belanja bahan baku dihapus, sistem otomatis menarik kembali (revert) stok.
      */
     public function destroy(Expense $expense): RedirectResponse
     {
+        // Revert stok jika nota bahan baku dihapus
+        if ($expense->isRawMaterial() && $expense->raw_material_id && $expense->raw_material_quantity) {
+            $rawMaterial = $expense->rawMaterial;
+            if ($rawMaterial) {
+                $rawMaterial->recordMutation(
+                    type: 'out',
+                    quantity: (float) $expense->raw_material_quantity,
+                    notes: "Penarikan stok (revert) karena pembatalan/penghapusan nota belanja {$expense->expense_number}",
+                    referenceNumber: "REVERT-{$expense->expense_number}",
+                    userId: auth()->id()
+                );
+            }
+        }
+
         if ($expense->receipt_proof) {
             Storage::disk('public')->delete($expense->receipt_proof);
         }

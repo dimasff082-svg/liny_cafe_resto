@@ -28,6 +28,7 @@ use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\TakeawayOrderController;
 use App\Http\Controllers\Warehouse\ExpenseController as WarehouseExpenseController;
+use App\Http\Controllers\Warehouse\RawMaterialController as WarehouseRawMaterialController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -224,6 +225,17 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
 
 // Warehouse Staff Routes (Staf Gudang & Admin/Owner)
 Route::middleware(['auth', 'role:warehouse,admin,owner'])->prefix('warehouse')->name('warehouse.')->group(function () {
+    // Inventori Bahan Baku Cafe & Kartu Stok
+    Route::get('/raw-materials', [WarehouseRawMaterialController::class, 'index'])->name('raw_materials.index');
+    Route::post('/raw-materials', [WarehouseRawMaterialController::class, 'store'])->name('raw_materials.store');
+    Route::put('/raw-materials/{raw_material}', [WarehouseRawMaterialController::class, 'update'])->name('raw_materials.update');
+    Route::delete('/raw-materials/{raw_material}', [WarehouseRawMaterialController::class, 'destroy'])->name('raw_materials.destroy');
+    Route::post('/raw-materials/{raw_material}/restock', [WarehouseRawMaterialController::class, 'restock'])->name('raw_materials.restock');
+    Route::post('/raw-materials/{raw_material}/usage', [WarehouseRawMaterialController::class, 'usage'])->name('raw_materials.usage');
+    Route::post('/raw-materials/{raw_material}/opname', [WarehouseRawMaterialController::class, 'opname'])->name('raw_materials.opname');
+    Route::get('/raw-materials/mutations', [WarehouseRawMaterialController::class, 'mutations'])->name('raw_materials.mutations');
+    Route::get('/raw-materials/{raw_material}/history', [WarehouseRawMaterialController::class, 'history'])->name('raw_materials.history');
+
     // Satu Halaman Transaksi Pengeluaran (Bahan Baku & Operasional)
     Route::get('/expenses', [WarehouseExpenseController::class, 'index'])->name('expenses.index');
     Route::post('/expenses', [WarehouseExpenseController::class, 'store'])->name('expenses.store');
