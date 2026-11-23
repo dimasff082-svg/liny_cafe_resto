@@ -212,6 +212,25 @@
                 <p id="cash-error" class="hidden text-xs font-bold text-rose-600"></p>
             </div>
 
+            <!-- Customer Information (Nama & No. WhatsApp untuk kirim struk) -->
+            <div class="grid grid-cols-2 gap-2 bg-white p-2.5 rounded-xl border border-[#e5dfd3]">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-[#786e60] mb-1">
+                        Nama Pelanggan
+                    </label>
+                    <input type="text" id="cart-customer-name" placeholder="Nama Pelanggan..."
+                        class="w-full bg-[#fcfbf9] border border-[#dcd4c5] rounded-lg px-2.5 py-1 text-xs text-[#262017] focus:outline-none focus:ring-1 focus:ring-amber-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-[#786e60] mb-1 flex items-center justify-between">
+                        <span>No. WhatsApp</span>
+                        <i class="fa-brands fa-whatsapp text-emerald-600 text-xs"></i>
+                    </label>
+                    <input type="tel" id="cart-customer-phone" placeholder="08xxxxxxxxxx"
+                        class="w-full bg-[#fcfbf9] border border-[#dcd4c5] rounded-lg px-2.5 py-1 text-xs text-[#262017] focus:outline-none focus:ring-1 focus:ring-amber-500">
+                </div>
+            </div>
+
             <!-- Notes Section -->
             <div>
                 <input type="text" id="cart-notes" placeholder="Catatan transaksi / Nomor meja (opsional)..."
@@ -399,6 +418,12 @@
         }
         if (document.getElementById('cart-notes')) {
             document.getElementById('cart-notes').value = '';
+        }
+        if (document.getElementById('cart-customer-name')) {
+            document.getElementById('cart-customer-name').value = '';
+        }
+        if (document.getElementById('cart-customer-phone')) {
+            document.getElementById('cart-customer-phone').value = '';
         }
         if (document.getElementById('cash-tendered')) {
             document.getElementById('cash-tendered').value = '';
@@ -615,6 +640,8 @@
             payment_method: method,
             discount_amount: getDiscountAmount(),
             amount_tendered: method === 'cash' ? tendered : total,
+            customer_name: document.getElementById('cart-customer-name')?.value.trim() || null,
+            customer_phone: document.getElementById('cart-customer-phone')?.value.trim() || null,
             notes: document.getElementById('cart-notes')?.value || null
         };
 

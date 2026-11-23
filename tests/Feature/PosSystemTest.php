@@ -754,4 +754,49 @@ class PosSystemTest extends TestCase
         $response = $this->get(route('cashier.dashboard'));
         $response->assertRedirect(route('owner.dashboard'));
     }
+
+    /**
+     * Uji POS Checkout: Menyimpan nama dan nomor WhatsApp pelanggan dari keranjang dan menampilkannya di struk dengan tombol WhatsApp.
+     */
+    public function test_pos_checkout_saves_customer_name_and_phone_and_displays_on_receipt_with_whatsapp_button(): void
+    {
+        $this->actingAs($this->cashier);
+
+        $product = Product::factory()->create([
+            'category_id' => $this->category->id,
+            'name' => 'Kopi Susu Gula Aren',
+            'selling_price' => 20000,
+            'is_active' => true,
+        ]);
+
+        $response = $this->postJson('/pos/checkout', [
+            'items' => [
+                ['id' => $product->id, 'quantity' => 2],
+            ],
+            'payment_method' => 'cash',
+            'amount_tendered' => 50000,
+            'customer_name' => 'Budi Santoso',
+            'customer_phone' => '081234567890',
+            'notes' => 'Less sugar',
+        ]);
+
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+        ]);
+
+        $sale = Sale::latest('id')->first();
+        $this->assertNotNull($sale);
+        $this->assertEquals('Budi Santoso', $sale->customer_name);
+        $this->assertEquals('081234567890', $sale->customer_phone);
+
+        // Akses halaman struk
+        $receiptResponse = $this->get(route('pos.receipt', $sale->id));
+        $receiptResponse->assertOk();
+        $receiptResponse->assertSee('Budi Santoso');
+        $receiptResponse->assertSee('081234567890');
+        $receiptResponse->assertSee('Kirim Struk ke WA');
+        $receiptResponse->assertSee('html2canvas');
+        $receiptResponse->assertSee('sendReceiptToWhatsApp');
+    }
 }

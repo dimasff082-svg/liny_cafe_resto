@@ -56,6 +56,8 @@ class PosController extends Controller
             'payment_method' => ['required', 'in:cash,transfer,qris'],
             'amount_tendered' => ['nullable', 'numeric', 'min:0'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'customer_name' => ['nullable', 'string', 'max:100'],
+            'customer_phone' => ['nullable', 'string', 'max:25'],
             'notes' => ['nullable', 'string', 'max:500'],
         ], [
             'items.required' => 'Keranjang belanja tidak boleh kosong.',
@@ -124,6 +126,8 @@ class PosController extends Controller
                 // 1. Simpan Transaksi Utama (Sale)
                 $sale = Sale::create([
                     'transaction_number' => $trxNumber,
+                    'customer_name' => $validated['customer_name'] ?? null,
+                    'customer_phone' => $validated['customer_phone'] ?? null,
                     'user_id' => $request->user()->id,
                     'transaction_date' => now(),
                     'subtotal' => $subtotal,
